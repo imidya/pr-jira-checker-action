@@ -76,10 +76,23 @@ async function run() {
     const octokit = github.getOctokit(token);
     const context = github.context;
 
+    // Check if this is a pull request event
+    if (!context.payload.pull_request) {
+      core.setFailed("This action can only be run on pull request events");
+      return;
+    }
+
+    // Get PR number
+    const prNumber = context.payload.pull_request.number;
+    if (!prNumber) {
+      core.setFailed("Could not get pull request number from context");
+      return;
+    }
+
     // Get PR commits
     const { data: commits } = await octokit.rest.pulls.listCommits({
       ...context.repo,
-      pull_number: context.payload.pull_request.number,
+      pull_number: prNumber,
     });
 
     // Extract Jira ticket IDs from commit messages using the configured pattern
@@ -94,6 +107,11 @@ async function run() {
           .flat()
       ),
     ];
+
+    if (ticketIds.length === 0) {
+      core.notice("No Jira ticket IDs found in commit messages");
+      return;
+    }
 
     // Get Jira issue information
     const jiraIssuesInfo = await Promise.all(
@@ -114,7 +132,7 @@ async function run() {
     // Update PR description
     await octokit.rest.pulls.update({
       ...context.repo,
-      pull_number: context.payload.pull_request.number,
+      pull_number: prNumber,
       body: output,
     });
   } catch (error) {
