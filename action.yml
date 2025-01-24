@@ -1,0 +1,29 @@
+name: 'PR Jira Checker'
+description: 'Scans PR commits for Jira issue references and updates PR description with structured Jira information'
+author: 'Sam Huang'
+
+inputs:
+  github-token:
+    description: 'GitHub token for API access'
+    required: true
+  jira-base-url:
+    description: 'Base URL of your Jira instance'
+    required: true
+  jira-email:
+    description: 'Jira user email'
+    required: true
+  jira-api-token:
+    description: 'Jira API token'
+    required: true
+  jira-ticket-id-pattern:
+    description: 'Regular expression pattern to match Jira ticket IDs in commit messages'
+    required: false
+    default: 'RC-[^ ]*'
+
+runs:
+  using: 'node20'
+  main: 'dist/index.js'
+
+branding:
+  icon: 'check-circle'
+  color: 'blue' 
